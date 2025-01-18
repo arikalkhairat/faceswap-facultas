@@ -9,6 +9,7 @@ const LiveCamera: React.FC = () => {
   const [isCameraActive, setIsCameraActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user')
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const webcamRef = useRef<Webcam>(null)
 
   const videoConstraints = {
@@ -37,6 +38,13 @@ const LiveCamera: React.FC = () => {
     setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'))
   }, [])
 
+  const captureImage = useCallback(() => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot()
+      setCapturedImage(imageSrc)
+    }
+  }, [webcamRef])
+
   return (
     <div className="w-full max-w-3xl mx-auto bg-[#F0F8FF] p-4 rounded-lg shadow-md">
       <div className="mb-4 flex justify-between items-center">
@@ -56,9 +64,14 @@ const LiveCamera: React.FC = () => {
           )}
         </Button>
         {isCameraActive && (
-          <Button onClick={switchCamera} className="bg-[#4682B4] text-white hover:bg-[#1E90FF] transition-colors">
-            <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
-          </Button>
+          <>
+            <Button onClick={switchCamera} className="bg-[#4682B4] text-white hover:bg-[#1E90FF] transition-colors">
+              <RefreshCw className="mr-2 h-4 w-4" /> Switch Camera
+            </Button>
+            <Button onClick={captureImage} className="bg-[#4682B4] text-white hover:bg-[#1E90FF] transition-colors">
+              Capture Image
+            </Button>
+          </>
         )}
       </div>
       <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
@@ -69,6 +82,8 @@ const LiveCamera: React.FC = () => {
             videoConstraints={videoConstraints}
             onUserMediaError={handleCameraError}
             className="w-full h-full object-cover"
+            mirrored={true} // Ensure this line is present to prevent mirroring
+            screenshotFormat="image/jpeg" // Add this line to specify the screenshot format
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
@@ -87,6 +102,12 @@ const LiveCamera: React.FC = () => {
           </div>
         )}
       </div>
+      {capturedImage && (
+        <div className="mt-4">
+          <h3 className="text-[#2F4F4F]">Captured Image:</h3>
+          <img src={capturedImage} alt="Captured" className="w-full h-auto mt-2 rounded-lg shadow-md" />
+        </div>
+      )}
     </div>
   )
 }
